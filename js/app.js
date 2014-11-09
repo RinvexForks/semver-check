@@ -19431,20 +19431,32 @@ var React = require('react');
 var SemverCheckerForm = React.createClass({displayName: 'SemverCheckerForm',
     handleChange: function() {
         var constraint = this.refs.constraint.getDOMNode().value.trim(),
-            version = this.refs.version.getDOMNode().value.trim();
+            version = this.refs.version.getDOMNode().value.trim(),
+            valid = true;
 
-        if (!constraint || !version) {
+        if (!constraint && !version) {
+            this.props.resetState();
             return;
         }
 
-        if (!this.props.onSemverValidate(version )) {
+        if (this.props.onSemverValidate(version )) {
+            this.refs.version.getDOMNode().classList.remove('error');
+        } else {
             this.refs.version.getDOMNode().classList.add('error');
-
-            return;
+            valid = false;
         }
 
-        this.refs.version.getDOMNode().classList.remove('error');
+        if (this.props.onConstraintValidate(constraint )) {
+            this.refs.constraint.getDOMNode().classList.remove('error');
+        } else {
+            this.refs.constraint.getDOMNode().classList.add('error');
+            valid = false;
+        }
 
+        if(!valid) {
+            this.props.resetState();
+            return;
+        }
         this.props.onSemverCheck(version, constraint);
     },
 
@@ -19475,6 +19487,9 @@ var SemverChecker = React.createClass({displayName: 'SemverChecker',
             constraint: null
         };
     },
+    resetState: function() {
+        this.setState(this.getInitialState());
+    },
 
     handleSemverCheck: function(version, constraint) {
         this.setState({
@@ -19488,10 +19503,15 @@ var SemverChecker = React.createClass({displayName: 'SemverChecker',
         return semver.valid(version);
     },
 
+    handleConstraintValidate: function(constraint) {
+        return semver.validRange(constraint);
+    },
+
     render: function() {
         return (
             React.createElement("div", null, 
-                React.createElement(SemverCheckerForm, {onSemverCheck:  this.handleSemverCheck, onSemverValidate:  this.handleSemverValidate}), 
+                React.createElement(SemverCheckerForm, {resetState:  this.resetState, onSemverCheck:  this.handleSemverCheck, 
+                    onSemverValidate:  this.handleSemverValidate, onConstraintValidate:  this.handleConstraintValidate}), 
 
                 React.createElement(SemverFeedback, {satisfies:  this.state.satisfies, version:  this.state.version, constraint:  this.state.constraint}), 
 
