@@ -19613,11 +19613,11 @@ var SemverExplainConstraintWarning = React.createClass({displayName: 'SemverExpl
             return (
                 React.createElement("div", null, 
                     React.createElement(If, {test:  !this.props.constraint.upper() && this.props.constraint.type() !== 'version'}, 
-                        React.createElement("p", null, "This constraint ", React.createElement("strong", null, "does not provide an upper bound"), " which means you will probably get ", React.createElement("strong", null, "unexpected BC break"), ".")
+                        React.createElement("p", null, "This constraint ", React.createElement("a", {href: "#why-using-loose-constraint-is-bad"}, "does not provide an upper bound"), " which means you will probably get ", React.createElement("strong", null, "unexpected BC break"), ".")
                     ), 
 
                     React.createElement(If, {test:  this.props.constraint.type() == 'version'}, 
-                        React.createElement("p", null, "This constraint ", React.createElement("strong", null, "is too strict"), " which means ", React.createElement("strong", null, "you won't even get bug fixes"), ".")
+                        React.createElement("p", null, "This constraint ", React.createElement("a", {href: "#why-using-strict-constraint-is-bad"}, "is too strict"), " which means ", React.createElement("strong", null, "you won't even get bug fixes"), ".")
                     )
                 )
             );
