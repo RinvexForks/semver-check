@@ -171,7 +171,7 @@ input {
   border: 1px solid #cfcfcf;
   border-right: none;
   border-left: none;
-  width: 10em;
+  width: 15em;
   -webkit-appearance: none;
   outline: none;
 }
@@ -194,7 +194,7 @@ input[type=submit] {
   background-color: rgba(207, 207, 207, 0.3);
 }
 .well {
-  width: 32em;
+  width: 47em;
   margin: 0 auto;
   padding: 0.5em;
   background-color: rgba(207, 207, 207, 0.3);
@@ -255,4 +255,44 @@ input[type=submit] {
   top: 0;
   right: 0;
   border: 0;
+}
+@media screen and (max-width: 750px) {
+  input {
+    border-left: 1px solid #cfcfcf;
+    border-right: 1px solid #cfcfcf;
+    border-top: 1px solid #cfcfcf;
+    border-bottom: none;
+    display: block;
+    margin: 0 auto;
+    -webkit-appearance: none;
+    outline: none;
+    width: 15em;
+  }
+  input:first-of-type {
+    border-radius: 0.2em 0.2em 0 0;
+  }
+  input:last-of-type {
+    border-bottom: 1px solid #cfcfcf;
+    border-radius: 0 0 0.2em 0.2em;
+  }
+  input + input {
+    border-left: 1px solid #cfcfcf;
+    border-radius: 0;
+  }
+  input.error {
+    color: #d60000;
+  }
+  input[type=submit] {
+    background-color: rgba(207, 207, 207, 0.3);
+  }
+  .well {
+    width: 23em;
+  }
+  .avatar img {
+    width: 3em!important;
+    border: 2px solid black!important;
+  }
+  .avatar a span {
+    display: none;
+  }
 }

@@ -10,7 +10,7 @@ React.render(
     document.getElementById('content')
 );
 
-},{"./components/semver-checker.jsx":151,"./libs/semver-constraint.js":160,"react":148,"semver":149}],2:[function(require,module,exports){
+},{"./components/semver-checker.jsx":151,"./libs/semver-constraint.js":163,"react":148,"semver":149}],2:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -19439,24 +19439,25 @@ var SemverCheckerForm = React.createClass({displayName: 'SemverCheckerForm',
             return;
         }
 
-        if (this.props.onSemverValidate(version )) {
+        if (this.props.onSemverValidate(version)) {
             this.refs.version.getDOMNode().classList.remove('error');
         } else {
             this.refs.version.getDOMNode().classList.add('error');
             valid = false;
         }
 
-        if (this.props.onConstraintValidate(constraint )) {
+        if (this.props.onConstraintValidate(constraint)) {
             this.refs.constraint.getDOMNode().classList.remove('error');
         } else {
             this.refs.constraint.getDOMNode().classList.add('error');
             valid = false;
         }
 
-        if(!valid) {
+        if (!valid) {
             this.props.resetState();
             return;
         }
+
         this.props.onSemverCheck(version, constraint);
     },
 
@@ -19504,7 +19505,7 @@ var SemverChecker = React.createClass({displayName: 'SemverChecker',
     },
 
     handleConstraintValidate: function(constraint) {
-        return semver.validRange(constraint);
+        return '' === constraint ? false : semver.validRange(constraint);
     },
 
     render: function() {
@@ -19523,7 +19524,34 @@ var SemverChecker = React.createClass({displayName: 'SemverChecker',
 
 module.exports = SemverChecker;
 
-},{"./semver-checker-form.jsx":150,"./semver-explain.jsx":157,"./semver-feedback.jsx":158,"react":148,"semver":149}],152:[function(require,module,exports){
+},{"./semver-checker-form.jsx":150,"./semver-explain.jsx":158,"./semver-feedback.jsx":159,"react":148,"semver":149}],152:[function(require,module,exports){
+var React = require('react'),
+    SemverRange = require('./semver-range.jsx'),
+    SemverComposerConstraint = require('../libs/semver-composer-constraint.js');
+
+var SemverExplainConstraintComposer = React.createClass({displayName: 'SemverExplainConstraintComposer',
+        render: function() {
+            if (!this.props.constraint) {
+                return false;
+            }
+
+            this.props.constraint = new SemverComposerConstraint(this.props.constraint);
+
+            if (this.props.constraint.type() !== 'range (tilde)' || this.props.constraint.parts().length !== 2) {
+                return false;
+            }
+
+            return (
+                React.createElement("p", null, 
+                    React.createElement("a", {href: "https://getcomposer.org"}, "Composer"), " handles tilde-range differently. Your constraint will translate to ", React.createElement(SemverRange, {lower:  this.props.constraint.lower(), upper:  this.props.constraint.upper() }), "."
+                )
+            );
+        }
+    });
+
+module.exports = SemverExplainConstraintComposer;
+
+},{"../libs/semver-composer-constraint.js":162,"./semver-range.jsx":161,"react":148}],153:[function(require,module,exports){
 var React = require('react'),
     If = require('./semver-if.jsx'),
     SemverConstraint = require('../libs/semver-constraint.js');
@@ -19565,9 +19593,9 @@ var SemverExplainConstraintIncludes = React.createClass({displayName: 'SemverExp
 
 module.exports = SemverExplainConstraintIncludes;
 
-},{"../libs/semver-constraint.js":160,"./semver-if.jsx":159,"react":148}],153:[function(require,module,exports){
+},{"../libs/semver-constraint.js":163,"./semver-if.jsx":160,"react":148}],154:[function(require,module,exports){
 var React = require('react'),
-    If = require('./semver-if.jsx'),
+    SemverRange = require('./semver-range.jsx'),
     SemverConstraint = require('../libs/semver-constraint.js');
 
 var SemverExplainConstraintRange = React.createClass({displayName: 'SemverExplainConstraintRange',
@@ -19578,15 +19606,10 @@ var SemverExplainConstraintRange = React.createClass({displayName: 'SemverExplai
 
             this.props.constraint = new SemverConstraint(this.props.constraint);
 
-            var lower = (this.props.constraint.lower() ? this.props.constraint.lower().toString() : false),
-                upper = (this.props.constraint.upper() ? this.props.constraint.upper().toString() : false);
-
-            if (this.props.constraint.type() !== 'version') {
+            if (['version', 'range (advanced)'].indexOf(this.props.constraint.type()) === -1 && ['<', '<=', '>', '>='].indexOf(this.props.constraint.operator()) === -1) {
                 return (
                     React.createElement("p", null, 
-                        "In fact, the current constraint will be satisfied by any version matching ", React.createElement(If, {test: lower }, React.createElement("code", null, lower )), 
-                         lower && upper ? ' ' : '', 
-                        React.createElement(If, {test: upper }, React.createElement("code", null, upper )), "."
+                        "In fact, the current constraint will be satisfied by any version matching ", React.createElement(SemverRange, {lower:  this.props.constraint.lower(), upper:  this.props.constraint.upper() }), "."
                     )
                 );
             }
@@ -19597,10 +19620,11 @@ var SemverExplainConstraintRange = React.createClass({displayName: 'SemverExplai
 
 module.exports = SemverExplainConstraintRange;
 
-},{"../libs/semver-constraint.js":160,"./semver-if.jsx":159,"react":148}],154:[function(require,module,exports){
+},{"../libs/semver-constraint.js":163,"./semver-range.jsx":161,"react":148}],155:[function(require,module,exports){
 var React = require('react'),
     SemverConstraint = require('../libs/semver-constraint.js'),
-    If = require('./semver-if.jsx');
+    If = require('./semver-if.jsx'),
+    SemverRange = require('./semver-if.jsx');
 
 var SemverExplainConstraintWarning = React.createClass({displayName: 'SemverExplainConstraintWarning',
         render: function() {
@@ -19612,7 +19636,14 @@ var SemverExplainConstraintWarning = React.createClass({displayName: 'SemverExpl
 
             return (
                 React.createElement("div", null, 
-                    React.createElement(If, {test:  !this.props.constraint.upper() && this.props.constraint.type() !== 'version'}, 
+                    React.createElement(If, {test:  this.props.constraint.type() == 'range (caret)'}, 
+                        React.createElement("p", null, 
+                            "If you are using ", React.createElement("a", {href: "https://getcomposer.org"}, "composer"), ", you won't be able to use caret-range constraint. You should" + ' ' +
+                            "use something like ", React.createElement(SemverRange, {lower:  this.props.constraint.lower(), upper:  this.props.constraint.upper() }), "."
+                        )
+                    ), 
+
+                    React.createElement(If, {test:  !this.props.constraint.upper() && ['version', 'range (advanced)'].indexOf(this.props.constraint.type()) === -1 && ['<', '<='].indexOf(this.props.constraint.operator()) === -1}, 
                         React.createElement("p", null, "This constraint ", React.createElement("a", {href: "#why-using-loose-constraint-is-bad"}, "does not provide an upper bound"), " which means you will probably get ", React.createElement("strong", null, "unexpected BC break"), ".")
                     ), 
 
@@ -19626,7 +19657,7 @@ var SemverExplainConstraintWarning = React.createClass({displayName: 'SemverExpl
 
 module.exports = SemverExplainConstraintWarning;
 
-},{"../libs/semver-constraint.js":160,"./semver-if.jsx":159,"react":148}],155:[function(require,module,exports){
+},{"../libs/semver-constraint.js":163,"./semver-if.jsx":160,"react":148}],156:[function(require,module,exports){
 var React = require('react'),
     SemverConstraint = require('../libs/semver-constraint.js');
 
@@ -19649,7 +19680,7 @@ var SemverExplainConstraint = React.createClass({displayName: 'SemverExplainCons
 
 module.exports = SemverExplainConstraint;
 
-},{"../libs/semver-constraint.js":160,"react":148}],156:[function(require,module,exports){
+},{"../libs/semver-constraint.js":163,"react":148}],157:[function(require,module,exports){
 var React = require('react'),
     semver = require('semver');
 
@@ -19680,12 +19711,13 @@ var SemverExplainVersion = React.createClass({displayName: 'SemverExplainVersion
 
 module.exports = SemverExplainVersion;
 
-},{"react":148,"semver":149}],157:[function(require,module,exports){
+},{"react":148,"semver":149}],158:[function(require,module,exports){
 var React = require('react'),
     semver = require('semver'),
     SemverExplainVersion = require('./semver-explain-version.jsx'),
     SemverExplainConstraint = require('./semver-explain-constraint.jsx'),
     SemverExplainConstraintRange = require('./semver-explain-constraint-range.jsx'),
+    SemverExplainConstraintComposer = require('./semver-explain-constraint-composer.jsx'),
     SemverExplainConstraintWarning = require('./semver-explain-constraint-warning.jsx'),
     SemverExplainConstraintIncludes = require('./semver-explain-constraint-includes.jsx');
 
@@ -19710,6 +19742,8 @@ var SemverExplain = React.createClass({displayName: 'SemverExplain',
 
                 React.createElement(SemverExplainConstraintRange, {constraint:  this.props.constraint}), 
 
+                React.createElement(SemverExplainConstraintComposer, {constraint:  this.props.constraint}), 
+
                 React.createElement(SemverExplainConstraintWarning, {constraint:  this.props.constraint}), 
 
                 React.createElement(SemverExplainConstraintIncludes, {constraint:  this.props.constraint}), 
@@ -19722,7 +19756,7 @@ var SemverExplain = React.createClass({displayName: 'SemverExplain',
 
 module.exports = SemverExplain;
 
-},{"./semver-explain-constraint-includes.jsx":152,"./semver-explain-constraint-range.jsx":153,"./semver-explain-constraint-warning.jsx":154,"./semver-explain-constraint.jsx":155,"./semver-explain-version.jsx":156,"react":148,"semver":149}],158:[function(require,module,exports){
+},{"./semver-explain-constraint-composer.jsx":152,"./semver-explain-constraint-includes.jsx":153,"./semver-explain-constraint-range.jsx":154,"./semver-explain-constraint-warning.jsx":155,"./semver-explain-constraint.jsx":156,"./semver-explain-version.jsx":157,"react":148,"semver":149}],159:[function(require,module,exports){
 var React = require('react');
 
 var SemverFeedback = React.createClass({displayName: 'SemverFeedback',
@@ -19753,7 +19787,7 @@ var SemverFeedback = React.createClass({displayName: 'SemverFeedback',
 
 module.exports = SemverFeedback;
 
-},{"react":148}],159:[function(require,module,exports){
+},{"react":148}],160:[function(require,module,exports){
 var React = require('react');
 
 var If = React.createClass({displayName: 'If',
@@ -19768,7 +19802,74 @@ var If = React.createClass({displayName: 'If',
 
 module.exports = If;
 
-},{"react":148}],160:[function(require,module,exports){
+},{"react":148}],161:[function(require,module,exports){
+var React = require('react'),
+    If = require('./semver-if.jsx');
+
+var SemverRange = React.createClass({displayName: 'SemverRange',
+    render: function() {
+        if (!this.props.lower && !this.props.upper) {
+            return false;
+        }
+
+        var lower = (this.props.lower ? this.props.lower.toString() : false),
+            upper = (this.props.upper ? this.props.upper.toString() : false);
+
+        return (
+            React.createElement("code", null, 
+                React.createElement(If, {test: lower }, React.createElement("span", null, lower )),  lower && upper ? ' ' : '', React.createElement(If, {test: upper }, React.createElement("span", null, upper ))
+            )
+        )
+    }
+});
+
+module.exports = SemverRange;
+
+},{"./semver-if.jsx":160,"react":148}],162:[function(require,module,exports){
+var semver = require('semver'),
+    SemverConstraint = require('./semver-constraint.js'),
+    padVersion = function (version, padding) {
+        version = version.toString().split('.');
+
+        while (version.length < 3) {
+            version.push(padding);
+        }
+
+        return version.join('.');
+    },
+    SemverComposerConstraint = function SemverComposerConstraint(value) {
+        SemverConstraint.call(this, value);
+    };
+
+SemverComposerConstraint.prototype = new SemverConstraint();
+SemverComposerConstraint.prototype.upper = function() {
+    var upper;
+
+    switch (this.type()) {
+        case 'range (tilde)':
+            if (this.parts().length === 2) {
+                upper = semver.inc(padVersion(this.cleaned(), '0'), 'major');
+
+
+                if (upper) {
+                    upper = new SemverConstraint('<' + upper);
+                }
+
+                this.upper = function() {
+                    return upper;
+                };
+
+                return upper;
+            }
+
+        default:
+            return SemverConstraint.prototype.upper.call(this);
+    }
+};
+
+module.exports = SemverComposerConstraint;
+
+},{"./semver-constraint.js":163,"semver":149}],163:[function(require,module,exports){
 var semver = require('semver'),
     padVersion = function (version, padding) {
         version = version.toString().split('.');
@@ -19780,8 +19881,10 @@ var semver = require('semver'),
         return version.join('.');
     },
     SemverConstraint = function SemverConstraint(value) {
-        this.constraint = value;
-        this.desugared = this.constraint.replace(/(x|X)/, '*');
+        if (value) {
+            this.constraint = value;
+            this.desugared = this.constraint.replace(/(x|X)/, '*');
+        }
     };
 
 SemverConstraint.prototype = {
