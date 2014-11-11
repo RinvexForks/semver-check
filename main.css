@@ -250,6 +250,9 @@ input[type=submit] {
 .article p {
   text-align: justify;
 }
+.article a {
+  font-weight: bold;
+}
 .github-ribbon {
   position: absolute;
   top: 0;
