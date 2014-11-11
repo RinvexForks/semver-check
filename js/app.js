@@ -19439,22 +19439,28 @@ var SemverCheckerForm = React.createClass({displayName: 'SemverCheckerForm',
             return;
         }
 
-        if (this.props.onSemverValidate(version)) {
+        if (!!version && this.props.onSemverValidate(version)) {
             this.refs.version.getDOMNode().classList.remove('error');
+            this.props.setVersion(version);
         } else {
             this.refs.version.getDOMNode().classList.add('error');
+            this.props.setVersion(null);
             valid = false;
         }
 
-        if (this.props.onConstraintValidate(constraint)) {
+        if (!!constraint && this.props.onConstraintValidate(constraint)) {
             this.refs.constraint.getDOMNode().classList.remove('error');
+            this.props.setConstraint(constraint);
         } else {
             this.refs.constraint.getDOMNode().classList.add('error');
+            if (!constraint) {
+                this.props.setConstraint(null);
+            }
             valid = false;
         }
 
         if (!valid) {
-            this.props.resetState();
+            this.props.resetSatisfies();
             return;
         }
 
@@ -19492,6 +19498,18 @@ var SemverChecker = React.createClass({displayName: 'SemverChecker',
         this.setState(this.getInitialState());
     },
 
+    setVersion: function(version) {
+        this.setState({version: version});
+    },
+
+    setConstraint: function(constraint) {
+        this.setState({constraint: constraint});
+    },
+
+    resetSatisfies: function() {
+        this.setState({satisfies: null});
+    },
+
     handleSemverCheck: function(version, constraint) {
         this.setState({
             satisfies: !!semver.satisfies(version, constraint),
@@ -19512,7 +19530,8 @@ var SemverChecker = React.createClass({displayName: 'SemverChecker',
         return (
             React.createElement("div", null, 
                 React.createElement(SemverCheckerForm, {resetState:  this.resetState, onSemverCheck:  this.handleSemverCheck, 
-                    onSemverValidate:  this.handleSemverValidate, onConstraintValidate:  this.handleConstraintValidate}), 
+                    onSemverValidate:  this.handleSemverValidate, onConstraintValidate:  this.handleConstraintValidate, 
+                    setVersion:  this.setVersion, setConstraint:  this.setConstraint, resetSatisfies:  this.resetSatisfies}), 
 
                 React.createElement(SemverFeedback, {satisfies:  this.state.satisfies, version:  this.state.version, constraint:  this.state.constraint}), 
 
@@ -19732,7 +19751,7 @@ var SemverExplain = React.createClass({displayName: 'SemverExplain',
         return version.join('.');
     },
     render: function() {
-        if (!this.props.version || !this.props.constraint) {
+        if (!this.props.version && !this.props.constraint) {
             return false;
         }
 
