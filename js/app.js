@@ -366,7 +366,6 @@ module.exports = BeforeInputEventPlugin;
  */
 var isUnitlessNumber = {
   columnCount: true,
-  fillOpacity: true,
   flex: true,
   flexGrow: true,
   flexShrink: true,
@@ -378,7 +377,11 @@ var isUnitlessNumber = {
   orphans: true,
   widows: true,
   zIndex: true,
-  zoom: true
+  zoom: true,
+
+  // SVG-related properties
+  fillOpacity: true,
+  strokeOpacity: true
 };
 
 /**
@@ -3618,7 +3621,11 @@ var HTMLDOMPropertyConfig = {
     draggable: null,
     encType: null,
     form: MUST_USE_ATTRIBUTE,
+    formAction: MUST_USE_ATTRIBUTE,
+    formEncType: MUST_USE_ATTRIBUTE,
+    formMethod: MUST_USE_ATTRIBUTE,
     formNoValidate: HAS_BOOLEAN_VALUE,
+    formTarget: MUST_USE_ATTRIBUTE,
     frameBorder: MUST_USE_ATTRIBUTE,
     height: MUST_USE_ATTRIBUTE,
     hidden: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
@@ -3633,6 +3640,8 @@ var HTMLDOMPropertyConfig = {
     list: MUST_USE_ATTRIBUTE,
     loop: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     manifest: MUST_USE_ATTRIBUTE,
+    marginHeight: null,
+    marginWidth: null,
     max: null,
     maxLength: MUST_USE_ATTRIBUTE,
     media: MUST_USE_ATTRIBUTE,
@@ -4323,7 +4332,7 @@ if ("production" !== process.env.NODE_ENV) {
 
 // Version exists only in the open-source version of React, not in Facebook's
 // internal version.
-React.version = '0.12.0';
+React.version = '0.12.2';
 
 module.exports = React;
 
@@ -6754,7 +6763,7 @@ var ReactCompositeComponentMixin = {
       boundMethod.__reactBoundArguments = null;
       var componentName = component.constructor.displayName;
       var _bind = boundMethod.bind;
-      boundMethod.bind = function(newThis ) {var args=Array.prototype.slice.call(arguments,1);
+      boundMethod.bind = function(newThis ) {for (var args=[],$__0=1,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
         // User is trying to bind() an autobound method; we effectively will
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
@@ -9103,7 +9112,7 @@ var ReactDefaultPerf = {
   },
 
   measure: function(moduleName, fnName, func) {
-    return function() {var args=Array.prototype.slice.call(arguments,0);
+    return function() {for (var args=[],$__0=0,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
       var totalTime;
       var rv;
       var start;
@@ -9607,7 +9616,7 @@ ReactElement.createElement = function(type, config, children) {
   }
 
   // Resolve default props
-  if (type.defaultProps) {
+  if (type && type.defaultProps) {
     var defaultProps = type.defaultProps;
     for (propName in defaultProps) {
       if (typeof props[propName] === 'undefined') {
@@ -9676,6 +9685,7 @@ module.exports = ReactElement;
 
 }).call(this,require('_process'))
 },{"./ReactContext":37,"./ReactCurrentOwner":38,"./warning":147,"_process":2}],55:[function(require,module,exports){
+(function (process){
 /**
  * Copyright 2014, Facebook, Inc.
  * All rights reserved.
@@ -9701,6 +9711,7 @@ var ReactPropTypeLocations = require("./ReactPropTypeLocations");
 var ReactCurrentOwner = require("./ReactCurrentOwner");
 
 var monitorCodeUse = require("./monitorCodeUse");
+var warning = require("./warning");
 
 /**
  * Warn if there's no key explicitly set on dynamic arrays of children or
@@ -9898,6 +9909,15 @@ function checkPropTypes(componentName, propTypes, props, location) {
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
+    // We warn in this case but don't throw. We expect the element creation to
+    // succeed and there will likely be errors in render.
+    ("production" !== process.env.NODE_ENV ? warning(
+      type != null,
+      'React.createElement: type should not be null or undefined. It should ' +
+        'be a string (for DOM elements) or a ReactClass (for composite ' +
+        'components).'
+    ) : null);
+
     var element = ReactElement.createElement.apply(this, arguments);
 
     // The result can be nullish if a mock or a custom function is used.
@@ -9910,22 +9930,24 @@ var ReactElementValidator = {
       validateChildKeys(arguments[i], type);
     }
 
-    var name = type.displayName;
-    if (type.propTypes) {
-      checkPropTypes(
-        name,
-        type.propTypes,
-        element.props,
-        ReactPropTypeLocations.prop
-      );
-    }
-    if (type.contextTypes) {
-      checkPropTypes(
-        name,
-        type.contextTypes,
-        element._context,
-        ReactPropTypeLocations.context
-      );
+    if (type) {
+      var name = type.displayName;
+      if (type.propTypes) {
+        checkPropTypes(
+          name,
+          type.propTypes,
+          element.props,
+          ReactPropTypeLocations.prop
+        );
+      }
+      if (type.contextTypes) {
+        checkPropTypes(
+          name,
+          type.contextTypes,
+          element._context,
+          ReactPropTypeLocations.context
+        );
+      }
     }
     return element;
   },
@@ -9943,7 +9965,8 @@ var ReactElementValidator = {
 
 module.exports = ReactElementValidator;
 
-},{"./ReactCurrentOwner":38,"./ReactElement":54,"./ReactPropTypeLocations":73,"./monitorCodeUse":138}],56:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"./ReactCurrentOwner":38,"./ReactElement":54,"./ReactPropTypeLocations":73,"./monitorCodeUse":138,"./warning":147,"_process":2}],56:[function(require,module,exports){
 (function (process){
 /**
  * Copyright 2014, Facebook, Inc.
@@ -12318,7 +12341,7 @@ function createInstanceForTag(tag, props, parentType) {
 
 var ReactNativeComponent = {
   createInstanceForTag: createInstanceForTag,
-  injection: ReactNativeComponentInjection,
+  injection: ReactNativeComponentInjection
 };
 
 module.exports = ReactNativeComponent;
@@ -18282,7 +18305,7 @@ var emptyFunction = require("./emptyFunction");
 var warning = emptyFunction;
 
 if ("production" !== process.env.NODE_ENV) {
-  warning = function(condition, format ) {var args=Array.prototype.slice.call(arguments,2);
+  warning = function(condition, format ) {for (var args=[],$__0=2,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
     if (format === undefined) {
       throw new Error(
         '`warning(condition, format, ...args)` requires a warning ' +
@@ -19428,7 +19451,7 @@ if (typeof define === 'function' && define.amd)
 },{}],150:[function(require,module,exports){
 var React = require('react');
 
-var SemverCheckerForm = React.createClass({displayName: 'SemverCheckerForm',
+var SemverCheckerForm = React.createClass({displayName: "SemverCheckerForm",
     handleChange: function() {
         var constraint = this.refs.constraint.getDOMNode().value.trim(),
             version = this.refs.version.getDOMNode().value.trim(),
@@ -19486,7 +19509,7 @@ var React = require('react'),
     SemverFeedback = require('./semver-feedback.jsx'),
     SemverExplain = require('./semver-explain.jsx');
 
-var SemverChecker = React.createClass({displayName: 'SemverChecker',
+var SemverChecker = React.createClass({displayName: "SemverChecker",
     getInitialState: function() {
         return {
             satisfies: null,
@@ -19548,7 +19571,7 @@ var React = require('react'),
     SemverRange = require('./semver-range.jsx'),
     SemverComposerConstraint = require('../libs/semver-composer-constraint.js');
 
-var SemverExplainConstraintComposer = React.createClass({displayName: 'SemverExplainConstraintComposer',
+var SemverExplainConstraintComposer = React.createClass({displayName: "SemverExplainConstraintComposer",
         render: function() {
             if (!this.props.constraint) {
                 return false;
@@ -19575,7 +19598,7 @@ var React = require('react'),
     If = require('./semver-if.jsx'),
     SemverConstraint = require('../libs/semver-constraint.js');
 
-var SemverExplainConstraintIncludes = React.createClass({displayName: 'SemverExplainConstraintIncludes',
+var SemverExplainConstraintIncludes = React.createClass({displayName: "SemverExplainConstraintIncludes",
         render: function() {
             if (!this.props.constraint) {
                 return false;
@@ -19617,7 +19640,7 @@ var React = require('react'),
     SemverRange = require('./semver-range.jsx'),
     SemverConstraint = require('../libs/semver-constraint.js');
 
-var SemverExplainConstraintRange = React.createClass({displayName: 'SemverExplainConstraintRange',
+var SemverExplainConstraintRange = React.createClass({displayName: "SemverExplainConstraintRange",
         render: function() {
             if (!this.props.constraint) {
                 return false;
@@ -19643,9 +19666,9 @@ module.exports = SemverExplainConstraintRange;
 var React = require('react'),
     SemverConstraint = require('../libs/semver-constraint.js'),
     If = require('./semver-if.jsx'),
-    SemverRange = require('./semver-if.jsx');
+    SemverRange = require('./semver-range.jsx');
 
-var SemverExplainConstraintWarning = React.createClass({displayName: 'SemverExplainConstraintWarning',
+var SemverExplainConstraintWarning = React.createClass({displayName: "SemverExplainConstraintWarning",
         render: function() {
             if (!this.props.constraint) {
                 return false;
@@ -19655,19 +19678,16 @@ var SemverExplainConstraintWarning = React.createClass({displayName: 'SemverExpl
 
             return (
                 React.createElement("div", null, 
-                    React.createElement(If, {test:  this.props.constraint.type() == 'range (caret)'}, 
-                        React.createElement("p", null, 
-                            "If you are using ", React.createElement("a", {href: "https://getcomposer.org"}, "composer"), ", you won't be able to use caret-range constraint. You should" + ' ' +
-                            "use something like ", React.createElement(SemverRange, {lower:  this.props.constraint.lower(), upper:  this.props.constraint.upper() }), "."
-                        )
-                    ), 
-
                     React.createElement(If, {test:  !this.props.constraint.upper() && ['version', 'range (advanced)'].indexOf(this.props.constraint.type()) === -1 && ['<', '<='].indexOf(this.props.constraint.operator()) === -1}, 
                         React.createElement("p", null, "This constraint ", React.createElement("a", {href: "#why-using-loose-constraint-is-bad"}, "does not provide an upper bound"), " which means you will probably get ", React.createElement("strong", null, "unexpected BC break"), ".")
                     ), 
 
                     React.createElement(If, {test:  this.props.constraint.type() == 'version'}, 
                         React.createElement("p", null, "This constraint ", React.createElement("a", {href: "#why-using-strict-constraint-is-bad"}, "is too strict"), " which means ", React.createElement("strong", null, "you won't even get bug fixes"), ".")
+                    ), 
+
+                    React.createElement(If, {test:  this.props.constraint.type() != 'version' && this.props.constraint.parts()[0] == '0'}, 
+                        React.createElement("p", null, "When locking on ", React.createElement("strong", null, "unstable releases"), " (", React.createElement("code", null, "0.x.y"), ") you should use a ", React.createElement("strong", null, "strict constraint"), ". As said by ", React.createElement("a", {href: "http://semver.org"}, "semver"), " (4), these releases may break anything at any time.")
                     )
                 )
             );
@@ -19676,11 +19696,11 @@ var SemverExplainConstraintWarning = React.createClass({displayName: 'SemverExpl
 
 module.exports = SemverExplainConstraintWarning;
 
-},{"../libs/semver-constraint.js":163,"./semver-if.jsx":160,"react":148}],156:[function(require,module,exports){
+},{"../libs/semver-constraint.js":163,"./semver-if.jsx":160,"./semver-range.jsx":161,"react":148}],156:[function(require,module,exports){
 var React = require('react'),
     SemverConstraint = require('../libs/semver-constraint.js');
 
-var SemverExplainConstraint = React.createClass({displayName: 'SemverExplainConstraint',
+var SemverExplainConstraint = React.createClass({displayName: "SemverExplainConstraint",
         render: function() {
             if (!this.props.constraint) {
                 return false;
@@ -19703,7 +19723,7 @@ module.exports = SemverExplainConstraint;
 var React = require('react'),
     semver = require('semver');
 
-var SemverExplainVersion = React.createClass({displayName: 'SemverExplainVersion',
+var SemverExplainVersion = React.createClass({displayName: "SemverExplainVersion",
         render: function() {
             if (!this.props.version) {
                 return false;
@@ -19740,7 +19760,7 @@ var React = require('react'),
     SemverExplainConstraintWarning = require('./semver-explain-constraint-warning.jsx'),
     SemverExplainConstraintIncludes = require('./semver-explain-constraint-includes.jsx');
 
-var SemverExplain = React.createClass({displayName: 'SemverExplain',
+var SemverExplain = React.createClass({displayName: "SemverExplain",
     padVersion: function(version, padding) {
         version = version.toString().split('.');
 
@@ -19778,7 +19798,7 @@ module.exports = SemverExplain;
 },{"./semver-explain-constraint-composer.jsx":152,"./semver-explain-constraint-includes.jsx":153,"./semver-explain-constraint-range.jsx":154,"./semver-explain-constraint-warning.jsx":155,"./semver-explain-constraint.jsx":156,"./semver-explain-version.jsx":157,"react":148,"semver":149}],159:[function(require,module,exports){
 var React = require('react');
 
-var SemverFeedback = React.createClass({displayName: 'SemverFeedback',
+var SemverFeedback = React.createClass({displayName: "SemverFeedback",
         render: function() {
             if (true === this.props.satisfies) {
                 return (
@@ -19809,7 +19829,7 @@ module.exports = SemverFeedback;
 },{"react":148}],160:[function(require,module,exports){
 var React = require('react');
 
-var If = React.createClass({displayName: 'If',
+var If = React.createClass({displayName: "If",
     render: function() {
         if (this.props.test) {
             return this.props.children;
@@ -19825,7 +19845,7 @@ module.exports = If;
 var React = require('react'),
     If = require('./semver-if.jsx');
 
-var SemverRange = React.createClass({displayName: 'SemverRange',
+var SemverRange = React.createClass({displayName: "SemverRange",
     render: function() {
         if (!this.props.lower && !this.props.upper) {
             return false;
@@ -20099,11 +20119,9 @@ SemverConstraint.prototype = {
                 if (this.parts()[0] !== '*') {
                     if (this.parts()[1] === '*') {
                         upper = semver.inc(padVersion(this.lower().cleaned(), '0'), 'major');
-                        //explain.constraint.include.minor = true;
                     } else {
                         if (this.parts().length === 1) {
                             upper = semver.inc(padVersion(this.lower().cleaned(), '0'), 'major');
-                            //explain.constraint.include.minor = true;
                         } else {
                             upper = semver.inc(padVersion(this.lower().cleaned(), '0'), 'minor');
                         }
