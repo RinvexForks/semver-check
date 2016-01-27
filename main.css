@@ -143,7 +143,6 @@ form {
   -webkit-animation-duration: 0.8s;
           animation-duration: 0.8s;
   -webkit-transform-origin: 50% 50%;
-      -ms-transform-origin: 50% 50%;
           transform-origin: 50% 50%;
   -webkit-animation-iteration-count: infinite;
           animation-iteration-count: infinite;
